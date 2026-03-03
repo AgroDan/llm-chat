@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — LLM Chat</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="admin-container">
+    <header>
+      <h1>Admin Settings</h1>
+      <a href="/" class="admin-link">Back to Chat</a>
+    </header>
+
+    {% if not logged_in %}
+    <form class="admin-login" method="POST" action="/admin/login">
+      <label for="password">Admin Password</label>
+      <input type="password" id="password" name="password" required autofocus>
+      {% if error %}
+      <p class="error">Incorrect password.</p>
+      {% endif %}
+      <button type="submit">Log In</button>
+    </form>
+
+    {% else %}
+    {% if saved %}
+    <p class="success">Settings saved.</p>
+    {% endif %}
+
+    <form method="POST" action="/admin" id="admin-form">
+      <label for="provider">Provider</label>
+      <select id="provider" name="provider">
+        <option value="openai" {% if config.provider == 'openai' %}selected{% endif %}>OpenAI</option>
+        <option value="anthropic" {% if config.provider == 'anthropic' %}selected{% endif %}>Anthropic</option>
+        <option value="ollama" {% if config.provider == 'ollama' %}selected{% endif %}>Ollama</option>
+      </select>
+
+      <div id="openai-key-group" class="field-group">
+        <label for="openai_api_key">OpenAI API Key</label>
+        <input type="password" id="openai_api_key" name="openai_api_key" value="{{ config.openai_api_key }}">
+      </div>
+
+      <div id="anthropic-key-group" class="field-group">
+        <label for="anthropic_api_key">Anthropic API Key</label>
+        <input type="password" id="anthropic_api_key" name="anthropic_api_key" value="{{ config.anthropic_api_key }}">
+      </div>
+
+      <div id="base-url-group" class="field-group">
+        <label for="base_url">Base URL</label>
+        <input type="text" id="base_url" name="base_url" value="{{ config.base_url }}" placeholder="http://localhost:11434">
+      </div>
+
+      <label for="model">Model</label>
+      <div class="model-row">
+        <input type="text" id="model" name="model" value="{{ config.model }}">
+        <button type="button" id="fetch-models">Fetch Models</button>
+      </div>
+      <select id="model-select" class="hidden"></select>
+
+      <label for="system_prompt">System Prompt</label>
+      <textarea id="system_prompt" name="system_prompt" rows="4">{{ config.system_prompt }}</textarea>
+
+      <label for="admin_password">New Admin Password (leave blank to keep current)</label>
+      <input type="password" id="admin_password" name="admin_password">
+
+      <button type="submit">Save Settings</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <script>
+    const providerSelect = document.getElementById('provider');
+    const openaiGroup = document.getElementById('openai-key-group');
+    const anthropicGroup = document.getElementById('anthropic-key-group');
+    const baseUrlGroup = document.getElementById('base-url-group');
+
+    function updateVisibility() {
+      const p = providerSelect.value;
+      openaiGroup.classList.toggle('hidden', p !== 'openai');
+      anthropicGroup.classList.toggle('hidden', p !== 'anthropic');
+      baseUrlGroup.classList.toggle('hidden', p !== 'ollama');
+    }
+
+    if (providerSelect) {
+      providerSelect.addEventListener('change', updateVisibility);
+      updateVisibility();
+    }
+
+    const fetchBtn = document.getElementById('fetch-models');
+    const modelInput = document.getElementById('model');
+    const modelSelect = document.getElementById('model-select');
+
+    if (fetchBtn) {
+      fetchBtn.addEventListener('click', async () => {
+        fetchBtn.disabled = true;
+        fetchBtn.textContent = 'Loading...';
+        try {
+          const res = await fetch('/models');
+          const models = await res.json();
+          modelSelect.innerHTML = '';
+          models.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            if (m === modelInput.value) opt.selected = true;
+            modelSelect.appendChild(opt);
+          });
+          modelSelect.classList.remove('hidden');
+          modelSelect.addEventListener('change', () => {
+            modelInput.value = modelSelect.value;
+          });
+        } catch (e) {
+          alert('Failed to fetch models: ' + e.message);
+        }
+        fetchBtn.disabled = false;
+        fetchBtn.textContent = 'Fetch Models';
+      });
+    }
+  </script>
+</body>
+</html>

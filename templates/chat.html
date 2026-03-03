@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Chat</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <header>
+      <h1>LLM Chat</h1>
+      <div class="header-actions">
+        <button id="new-chat" title="New chat">New Chat</button>
+        <a href="/admin" class="admin-link" title="Admin">Admin</a>
+      </div>
+    </header>
+    <div id="messages" class="messages"></div>
+    <form id="chat-form" class="input-area">
+      <textarea id="input" placeholder="Type a message..." rows="1" autofocus></textarea>
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
