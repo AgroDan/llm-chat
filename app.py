@@ -17,7 +17,7 @@ from config import get_config, save_config
 from providers import list_models, stream_chat
 
 app = Flask(__name__)
-app.secret_key = os.urandom(32)
+app.secret_key = os.environ.get("SECRET_KEY", "change-me-in-production")
 
 
 @app.route("/")
@@ -66,14 +66,13 @@ def chat():
 @app.route("/models")
 def models():
     cfg = get_config()
-    provider = cfg["provider"]
-    base_url = cfg.get("base_url", "")
-    if provider == "anthropic":
-        api_key = cfg.get("anthropic_api_key", "")
-    elif provider == "openai":
-        api_key = cfg.get("openai_api_key", "")
-    else:
-        api_key = ""
+    provider = request.args.get("provider") or cfg["provider"]
+    base_url = request.args.get("base_url") or cfg.get("base_url", "")
+    api_key = request.args.get("api_key") or (
+        cfg.get("anthropic_api_key", "") if provider == "anthropic"
+        else cfg.get("openai_api_key", "") if provider == "openai"
+        else ""
+    )
     return jsonify(list_models(provider, api_key, base_url))
 
 

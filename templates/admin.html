@@ -96,7 +96,15 @@
         fetchBtn.disabled = true;
         fetchBtn.textContent = 'Loading...';
         try {
-          const res = await fetch('/models');
+          const provider = providerSelect.value;
+          const apiKey = provider === 'anthropic'
+            ? document.getElementById('anthropic_api_key').value
+            : provider === 'openai'
+            ? document.getElementById('openai_api_key').value
+            : '';
+          const baseUrl = document.getElementById('base_url').value;
+          const params = new URLSearchParams({ provider, api_key: apiKey, base_url: baseUrl });
+          const res = await fetch('/models?' + params);
           const models = await res.json();
           modelSelect.innerHTML = '';
           models.forEach(m => {
